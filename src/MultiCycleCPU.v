@@ -57,9 +57,9 @@ wire [4:0]rt;
 wire [4:0]rd;
 wire [4:0]Shamt;
 wire [5:0]Funct;
-wire [5:0]Opcode;
+wire [5:0]OpCode;
 InstReg IR(.reset(reset),.clk(clk),.IRWrite(IRWrite),.Instruction(Mem_data),
-           .OpCode(Opcode),.rs(rs),.rt(rt),.rd(rd),
+           .OpCode(OpCode),.rs(rs),.rt(rt),.rd(rd),
            .Shamt(Shamt),.Funct(Funct));
 
 //MDR
@@ -74,7 +74,7 @@ wire [31:0]B_out;
 RegTemp Reg_B(.reset(reset),.clk(clk),.Data_i(Read_data2),.Data_o(B_out));
 //ALUOut
 wire [31:0]ALU_out;
-RegTemp ALU_out_reg(.reset(reset),.clk(clk),.Data_i(Result),.Data_out(ALU_out));
+RegTemp ALU_out_reg(.reset(reset),.clk(clk),.Data_i(Result),.Data_o(ALU_out));
 
 
 //RF
@@ -82,8 +82,8 @@ wire [4:0]Write_register;
 wire [31:0] Read_data1;
 wire [31:0] Read_data2;
 wire [31:0] Write_data;
-assign Write_register = (RegDst == 2'b01)?rd:rt;
-assign Write_data = (MemtoReg == 1)?Mem_data:ALU_out;
+assign Write_register = (RegDst == 2'b01)?rd:(RegDst == 2'b10)?5'b11111:rt;
+assign Write_data = (MemtoReg == 2'b01)?Mem_data:(MemtoReg == 2'b00)?ALU_out:PC_next;
 RegisterFile RF(.reset(reset),.clk(clk),.RegWrite(RegWrite),
                 .Read_register1(rs),.Read_register2(rt),
                 .Write_register(Write_register),.Write_data(Write_data),
@@ -96,16 +96,16 @@ wire IorD;
 wire MemWrite;
 wire MemRead;
 wire IRWrite;
-wire MemtoReg;
+wire [1:0]MemtoReg;
 wire [1:0]RegDst;
-wire RegWrite;
+wire [1:0]RegWrite;
 wire ExtOp;
 wire LuiOp;
 wire [1:0] ALUSrcA;
 wire [1:0] ALUSrcB;
 wire [3:0] ALUOp;
 wire [1:0] PCSource;
-Controller controller(.reset(reset),.clk(clk),.Opcode(Opcode),
+Controller controller(.reset(reset),.clk(clk),.OpCode(OpCode),
                       .Funct(Funct),.PCWrite(PCWrite),.PCWriteCond(PCWriteCond),
                       .IorD(IorD),.MemWrite(MemWrite),.MemRead(MemRead),
                       .IRWrite(IRWrite),.MemtoReg(MemtoReg),.RegDst(RegDst),
@@ -121,7 +121,7 @@ ALUControl ALU_control(.ALUOp(ALUOp),.Funct(Funct),.ALUConf(ALUConf),.Sign(Sign)
 wire [31:0]In1;
 wire [31:0]In2;
 
-assign In1 = (ALUSrcA == 2'b01)?PC_cur:A_out;
+assign In1 = (ALUSrcA == 2'b01)?PC_cur:(ALUSrcA == 2'b10)?Shamt:A_out;
 assign In2 = (ALUSrcB == 2'b01)?4:(ALUSrcB == 2'b10)?ImmExtOut:(ALUSrcB == 2'b11)?ImmExtShift:B_out;
 wire Zero;
 wire [31:0]Result;
