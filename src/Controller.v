@@ -37,7 +37,7 @@ output reg IorD;
 output reg MemWrite;
 output reg MemRead;
 output reg IRWrite;
-output reg MemtoReg;
+output reg [1:0] MemtoReg;
 output reg [1:0] RegDst;
 output reg RegWrite;
 output reg ExtOp;
@@ -60,6 +60,12 @@ parameter [5:0]lui = 5'h0f;
 parameter [5:0]R = 5'h0;
 parameter [5:0]J = 5'h02;
 parameter [5:0]beq = 5'h04;
+parameter [5:0]addi = 5'h08;
+parameter [5:0]addiu = 5'h09;
+parameter [5:0]andi = 5'h0c;
+parameter [5:0]slti = 5'h0a;
+parameter [5:0]sltiu = 5'h0b;
+parameter [5:0]jal = 5'h03;
 
 reg [2:0]state;
 reg [2:0]state_next;
@@ -74,7 +80,6 @@ always @(posedge reset or posedge clk)
 
 always @(state)
   begin
-
     case (state)
       sIF:
         begin
@@ -83,10 +88,13 @@ always @(state)
           IRWrite <= 1'b1;
           PCWrite <= 1'b1;
           PCSource <= 2'b00;
-          ALUSrcA = 2'b00;
-          ALUSrcB = 2'b01;
+          ALUSrcA <= 2'b00;
+          ALUSrcB <= 2'b01;
           IorD <= 1'b0;
           state_next <= sID;
+
+          PCWriteCond <= 1'b0;
+          RegWrite <= 1'b0;
         end
       sID:
         begin
@@ -94,15 +102,22 @@ always @(state)
           ALUSrcA <= 2'b00;
           ALUSrcB <= 2'b11;
           state_next <= EX;
+
+          IRWrite <= 1'b0;
+          MemRead <= 1'b0;
+          PCWrite <= 1'b0;
         end
       EX:
         begin
           case (OpCode)
-            J:
+            J,jal:
               begin
                 PCWrite <= 1'b1;
                 PCSource <= 2'b10;
-                state_next <= sIF;
+                if(OpCode == J)
+                  state_next <= sIF;
+                else
+                  state_next <= WB;
               end
             beq:
               begin
@@ -114,18 +129,36 @@ always @(state)
               end
             R:
               begin
-                ALUSrcA <= 2'b01;
+                if((Funct == 6'h0) || (Funct == 6'h02) || (Funct == 6'h03))
+                  ALUSrcA <= 2'b10;
+                else
+                  ALUSrcA <= 2'b01;
                 ALUSrcB <= 2'b00;
                 state_next <= WB;
               end
-            lw，sw:
+            lw,sw:
+              begin
+                ALUSrcA <= 2'b01;
+                ALUSrcB <= 2'b11;
+                state_next <= MEM;
+              end
+            addi,addiu,andi,slti,sltiu,lui:
               begin
                 ALUSrcA <= 2'b01;
                 ALUSrcB <= 2'b10;
-                state_next <= MEM;
+                if((OpCode == addiu) || (OpCode == sltiu))
+                  ExtOp <= 1'b0;
+                else
+                  ExtOp <= 1'b1;
+                if(OpCode == lui)
+                  LuiOp <= 1'b1;
+                else
+                  LuiOp <= 1'b0;
+                state_next <= WB;
               end
             default:
-            endcase
+              state_next <= sIF;
+          endcase
         end
       MEM:
         begin
@@ -143,26 +176,44 @@ always @(state)
                 state_next <= WB;
               end
             default:
-            endcase
+              state_next <= sIF;
+          endcase
         end
       WB:
-        case (OpCode)
-          R:
-            begin
-              RegWrite <= 1;
-              RegDst <= 2'b01;
-              MemtoReg <= 1'b0;
-            end
-          lw:
-            begin
-              RegWrite <= 1;
-              RegDst <= 2'b01;
-              MemtoReg <= 0;
-            end
-          default:
+        begin
+          case (OpCode)
+            R:
+              begin
+                RegWrite <= 1'b1;
+                RegDst <= 2'b01;
+                MemtoReg <= 2'b00;
+              end
+            lw:
+              begin
+                RegWrite <= 1'b1;
+                RegDst <= 2'b01;
+                MemtoReg <= 2'b01;
+              end
+            addi,addiu,andi,slti,sltiu,lui:
+              begin
+                RegWrite <= 1'b1;
+                RegDst <= 2'b00;
+                MemtoReg <= 2'b00;
+              end
+            jal:
+              begin
+                RegWrite <= 1'b1;
+                RegDst <= 2'b10;
+                MemtoReg <= 2'b10;
+              end
+            default:
+              state_next <= sIF;
           endcase
+          state_next <= sIF;
+        end
       default:
-      endcase
+        state_next <= sIF;
+    endcase
   end
 
 //--------------Your code above-----------------------
