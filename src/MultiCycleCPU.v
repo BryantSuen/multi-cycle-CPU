@@ -78,7 +78,6 @@ RegTemp ALU_out_reg(.reset(reset),.clk(clk),.Data_i(Result),.Data_out(ALU_out));
 
 
 //RF
-wire RegWrite;
 wire [4:0]Write_register;
 wire [31:0] Read_data1;
 wire [31:0] Read_data2;
@@ -91,14 +90,15 @@ RegisterFile RF(.reset(reset),.clk(clk),.RegWrite(RegWrite),
                 .Read_data1(Read_data1),.Read_data2(Read_data2));
 
 //controller
+wire PCWrite;
 wire PCWriteCond;
 wire IorD;
 wire MemWrite;
-wire PCWrite;
 wire MemRead;
 wire IRWrite;
 wire MemtoReg;
 wire [1:0]RegDst;
+wire RegWrite;
 wire ExtOp;
 wire LuiOp;
 wire [1:0] ALUSrcA;
