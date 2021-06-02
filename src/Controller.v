@@ -80,12 +80,6 @@ always @(posedge reset or posedge clk)
 
 always @(state)
   begin
-    PCWrite = 1'b0;
-    PCWriteCond = 1'b0;
-    MemWrite = 1'b0;
-    MemRead = 1'b0;
-    IRWrite = 1'b0;
-    RegWrite = 1'b0;
     case (state)
       sIF:
         begin
@@ -98,6 +92,9 @@ always @(state)
           ALUSrcB <= 2'b01;
           IorD <= 1'b0;
           state_next <= sID;
+
+          PCWriteCond <= 1'b0;
+          RegWrite <= 1'b0;
         end
       sID:
         begin
@@ -105,6 +102,10 @@ always @(state)
           ALUSrcA <= 2'b00;
           ALUSrcB <= 2'b11;
           state_next <= EX;
+
+          IRWrite <= 1'b0;
+          MemRead <= 1'b0;
+          PCWrite <= 1'b0;
         end
       EX:
         begin
@@ -138,24 +139,21 @@ always @(state)
             lw,sw:
               begin
                 ALUSrcA <= 2'b01;
-                ALUSrcB <= 2'b10;
+                ALUSrcB <= 2'b11;
                 state_next <= MEM;
               end
-            lui:
+            addi,addiu,andi,slti,sltiu,lui:
               begin
-                LuiOp <= 1'b1;
                 ALUSrcA <= 2'b01;
                 ALUSrcB <= 2'b10;
-                state_next <= WB;
-              end
-            addi,addiu,andi,slti,sltiu:
-              begin
-                ALUSrcA <= 2'b01;
-                ALUSrcB <= 2'b11;
                 if((OpCode == addiu) || (OpCode == sltiu))
                   ExtOp <= 1'b0;
                 else
                   ExtOp <= 1'b1;
+                if(OpCode == lui)
+                  LuiOp <= 1'b1;
+                else
+                  LuiOp <= 1'b0;
                 state_next <= WB;
               end
             default:

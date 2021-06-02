@@ -121,7 +121,7 @@ ALUControl ALU_control(.ALUOp(ALUOp),.Funct(Funct),.ALUConf(ALUConf),.Sign(Sign)
 wire [31:0]In1;
 wire [31:0]In2;
 
-assign In1 = (ALUSrcA == 2'b01)?PC_cur:(ALUSrcA == 2'b10)?Shamt:A_out;
+assign In1 = (ALUSrcA == 2'b00)?PC_cur:(ALUSrcA == 2'b10)?Shamt:A_out;
 assign In2 = (ALUSrcB == 2'b01)?4:(ALUSrcB == 2'b10)?ImmExtOut:(ALUSrcB == 2'b11)?ImmExtShift:B_out;
 wire Zero;
 wire [31:0]Result;
