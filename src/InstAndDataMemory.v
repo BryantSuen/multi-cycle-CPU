@@ -47,8 +47,8 @@ module InstAndDataMemory(reset, clk, Address, Write_data, MemRead, MemWrite, Mem
 	always @(posedge reset or posedge clk) begin
 		if (reset) begin
 		    // init instruction memory
-            // addi $a0, $zero, 12123 #(0x2f58)
-            RAM_data[8'd0] <= {6'h08, 5'd0 , 5'd4 , 16'h2f58};
+            // addi $a0, $zero, 12123 #(0x2f5b)
+            RAM_data[8'd0] <= {6'h08, 5'd0 , 5'd4 , 16'h2f5b};
             // addiu $a1, $zero, -12345 #(0xcfc7)
             RAM_data[8'd1] <= {6'h09, 5'd0 , 5'd5 , 16'hcfc7};
             // sll $a2, $a1, 16
