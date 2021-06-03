@@ -146,10 +146,7 @@ always @(state)
               begin
                 ALUSrcA <= 2'b01;
                 ALUSrcB <= 2'b10;
-                if((OpCode == addiu) || (OpCode == sltiu))
-                  ExtOp <= 1'b0;
-                else
-                  ExtOp <= 1'b1;
+                ExtOp <= 1'b1;
                 if(OpCode == lui)
                   LuiOp <= 1'b1;
                 else
