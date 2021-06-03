@@ -95,10 +95,10 @@ always @(state)
 
           PCWriteCond <= 1'b0;
           RegWrite <= 1'b0;
+          MemWrite <= 1'b0;
         end
       sID:
         begin
-          state_next <= EX;
           ALUSrcA <= 2'b00;
           ALUSrcB <= 2'b11;
           state_next <= EX;
@@ -181,35 +181,32 @@ always @(state)
         end
       WB:
         begin
+          RegWrite <= 1'b1;
+          state_next <= sIF;
           case (OpCode)
             R:
               begin
-                RegWrite <= 1'b1;
                 RegDst <= 2'b01;
                 MemtoReg <= 2'b00;
               end
             lw:
               begin
-                RegWrite <= 1'b1;
                 RegDst <= 2'b01;
                 MemtoReg <= 2'b01;
               end
             addi,addiu,andi,slti,sltiu,lui:
               begin
-                RegWrite <= 1'b1;
                 RegDst <= 2'b00;
                 MemtoReg <= 2'b00;
               end
             jal:
               begin
-                RegWrite <= 1'b1;
                 RegDst <= 2'b10;
                 MemtoReg <= 2'b10;
               end
             default:
               state_next <= sIF;
           endcase
-          state_next <= sIF;
         end
       default:
         state_next <= sIF;

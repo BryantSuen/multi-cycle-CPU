@@ -83,7 +83,7 @@ wire [31:0] Read_data1;
 wire [31:0] Read_data2;
 wire [31:0] Write_data;
 assign Write_register = (RegDst == 2'b01)?rd:(RegDst == 2'b10)?5'b11111:rt;
-assign Write_data = (MemtoReg == 2'b01)?Mem_data:(MemtoReg == 2'b00)?ALU_out:PC_next;
+assign Write_data = (MemtoReg == 2'b01)?Mem_data:(MemtoReg == 2'b10)?PC_next:ALU_out;
 RegisterFile RF(.reset(reset),.clk(clk),.RegWrite(RegWrite),
                 .Read_register1(rs),.Read_register2(rt),
                 .Write_register(Write_register),.Write_data(Write_data),
@@ -121,7 +121,7 @@ ALUControl ALU_control(.ALUOp(ALUOp),.Funct(Funct),.ALUConf(ALUConf),.Sign(Sign)
 wire [31:0]In1;
 wire [31:0]In2;
 
-assign In1 = (ALUSrcA == 2'b00)?PC_cur:(ALUSrcA == 2'b10)?Shamt:A_out;
+assign In1 = (ALUSrcA == 2'b00)?PC_cur:(ALUSrcA == 2'b10)?{27'h0,Shamt}:A_out;
 assign In2 = (ALUSrcB == 2'b01)?4:(ALUSrcB == 2'b10)?ImmExtOut:(ALUSrcB == 2'b11)?ImmExtShift:B_out;
 wire Zero;
 wire [31:0]Result;
