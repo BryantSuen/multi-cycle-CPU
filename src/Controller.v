@@ -139,7 +139,7 @@ always @(state)
             lw,sw:
               begin
                 ALUSrcA <= 2'b01;
-                ALUSrcB <= 2'b11;
+                ALUSrcB <= 2'b10;
                 state_next <= MEM;
               end
             addi,addiu,andi,slti,sltiu,lui:
