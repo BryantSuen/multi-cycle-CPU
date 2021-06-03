@@ -83,17 +83,87 @@
 \subsection{setsub类型和机器码字段内容}
 setsub rd rs rt : \{6'h0,rs[4:0],rt[4:0],rd[4:0],5'h0,6'h28\}
 \subsection{ALU verilog代码修改}
-见代码附件。
+对应ALUConf设置为5'b00011，具体代码见附件。
 \subsection{仿真结果}
+
 
 \section{汇编程序分析-1}
 \subsection{计算寄存器值}
+\begin{lstlisting}
+    addi $a0, $zero, 12123      # $a0 = 0x0000_2f5b
+    addiu $a1, $zero, -12345    # $a1 = 0xffff_cfc7
+    sll $a2, $a1, 16            # $a2 = 0xcfc7_0000
+    sra $a3, $a2, 16            # $a3 = 0xffff_cfc7
+    beq $a3, $a1, L1            # 跳转至L1
+    lui $a0, 22222              # 不执行
+
+    L1:
+    add $t0, $a2, $a0           # $t0 = 0xcfc7_2f5b
+    sra $t1, $t0, 8             # $t1 = 0xffcf_c72f
+    addi $t2, $zero, -12123     # $t2 = 0xffff_d0a5
+    slt $v0, $a0, $t2           # 有符号情况下 $a0 > $t2 ,$v0=1
+    sltu $v1, $a0, $t2          # 无符号情况下 $a0 < $t2 ,$v1=0
+
+    Loop:
+    j Loop
+\end{lstlisting}
 \subsection{仿真结果}
+\begin{center}
+    \includegraphics[width = 14cm]{images/sim_1_waveform.png}
+\end{center}
+可见与计算结果一致。
 
 \section{汇编程序分析-2}
 \subsection{程序功能以及代码注释}
-\subsection{将这段汇编翻译成机器码并写出}
+\begin{lstlisting}
+    addi $a0, $zero, 5      # $a0 = 5
+    xor $v0, $zero, $zero   # $v0 = 0
+    jal sum                 # 跳转到sum
+    Loop:
+    beq $zero, $zero, Loop  # 程序结束
+    sum:
+    addi $sp, $sp, -8       # 入栈前栈指针-8
+    sw $ra, 4($sp)          # $ra 入栈
+    sw $a0, 0($sp)          # $a0 入栈
+    slti $t0, $a0, 1        # if $a0 < 1 $t0 = 1
+    beq $t0, $zero, L1      # if $a0 >= 1, goto L1
+    addi $sp, $sp, 8        # 出栈恢复栈指针
+    jr $ra                  # 回到上一个过程$ra存的位置
+    L1:
+    add $v0, $a0, $v0       # $v0 = $a0 + $v0
+    addi $a0, $a0, -1       # $a0 = $a0 - 1
+    jal sum                 # 迭代
+    lw $a0, 0($sp)          
+    lw $ra, 4($sp)
+    addi $sp, $sp, 8        # 出栈恢复栈指针
+    add $v0, $a0, $v0       # 又加一次，$v0 = $a0 + $v0
+    jr $ra
+\end{lstlisting}
+可见每次循环相当于加了两次\$a0，因此如果第一行的 5 是任意正整数 n，程序实现了2$\sum_{i=1}^ni$的功能。此外由于lw，\$a0最终值仍为n。
+\subsection{将汇编翻译成机器码并写出}
+\begin{lstlisting}
+    {6'h08,5'd0,5'd4,16'd5}
+    {6'h0,5'd0,5'd0,5'd2,5'h0,6'h26}
+    {6'h03,26'd4}
+    {6'h04,5'd0,5'd0,16'hffff}
+    {6'h08,5'd29,5'd29,16'dfff8}
+    {6'h2b,5'd29,5'd31,16'd4}
+    {6'h2b,5'd29,5'd4,16'd0}
+    {6'h0a,5'd4,5'd8,16'd1}
+    {6'h04,5'd8,5'd0,16'd2}
+    {6'h08,5'd29,5'd29,16'd8}
+    {6'h0,5'd31,15'd0,6'h08}
+    {6'h0,5'd4,5'd2,5'd2,5'd0,6'h20}
+    {6'h08,5'd04,5'd04,16'hffff}
+    {6'h03,26'h4}
+    {6'h23,5'd29,5'd4,16'd0}
+    {6'h23,5'd29,5'd31,16'd4}
+    {6'h08,5'd29,5'd29,16'd8}
+    {6'h0,5'd4,5'd2,5'd2,5'd0,6'h20}
+    {6'h0,5'd31,15'd0,6'h08}
+\end{lstlisting}
 \subsection{\$a0,\$v0值}
+
 \subsection{观察、描述并解释 PC、\$a0、\$v0、\$sp、\$ra 如何变化}
 
 \section{异常处理}
