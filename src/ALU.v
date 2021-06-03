@@ -35,7 +35,7 @@ module ALU(ALUConf, Sign, In1, In2, Zero, Result);
     assign Zero = (Result == 0);
 
     //ALU logic
-    wire ss;
+    wire [1:0]ss;
 	assign ss = {In1[31], In2[31]};
 	
 	wire lt_31;
