@@ -138,6 +138,12 @@ always @(state)
                 else
                   ALUSrcA <= 2'b01;
                 ALUSrcB <= 2'b00;
+                if(Funct == 6'h09)  //jalr
+                  begin
+                    RegDst <= 2'b01;
+                    MemtoReg <= 2'b00;
+                    RegWrite <= 1'b1;
+                  end
                 if(Funct == 6'h8)
                   begin
                     state_next <= sIF;
@@ -196,13 +202,21 @@ always @(state)
               begin
                 PCWrite <= 1'b1;
                 PCSource <= 2'b10;
-                state_next <= sIF;
                 RegWrite <= 1'b0;
               end
             R:
               begin
-                RegDst <= 2'b01;
-                MemtoReg <= 2'b00;
+                if(Funct == 6'h09)
+                  begin
+                    PCWrite <= 1'b1;
+                    PCSource <= 2'b10;
+                    RegWrite <= 1'b0;
+                  end
+                else
+                  begin
+                    RegDst <= 2'b01;
+                    MemtoReg <= 2'b00;
+                  end
               end
             lw:
               begin
