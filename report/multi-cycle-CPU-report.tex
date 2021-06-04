@@ -109,7 +109,7 @@ setsub rd rs rt : \{6'h0,rs[4:0],rt[4:0],rd[4:0],5'h0,6'h28\}
 \end{lstlisting}
 \subsection{仿真结果}
 \begin{center}
-    \includegraphics[width = 14cm]{images/sim_1_waveform.png}
+    \includegraphics[width = 16cm]{images/sim_1_waveform.png}
 \end{center}
 可见与计算结果一致。
 
@@ -162,9 +162,27 @@ setsub rd rs rt : \{6'h0,rs[4:0],rt[4:0],rd[4:0],5'h0,6'h28\}
     {6'h0,5'd4,5'd2,5'd2,5'd0,6'h20}
     {6'h0,5'd31,15'd0,6'h08}
 \end{lstlisting}
+修改文件位于InstAndDataMemory\_1.v
 \subsection{\$a0,\$v0值}
+根据上述分析，\$v0值为30，即0x1e，\$a0值为5，仿真结果如图
+\begin{center}
+    \includegraphics[width = 16cm]{images/sim_2_waveform.png}
+\end{center}
 
 \subsection{观察、描述并解释 PC、\$a0、\$v0、\$sp、\$ra 如何变化}
+PC在sIF状态结束时+4，在beq、j、jal、jr的EX阶段结束时PC跳转到对应的地址，如下图所示。
+\begin{center}
+    \includegraphics[width = 16cm]{images/pc_waveform.png}
+\end{center}
+\$a0从5减小至0再增加至0，
+\begin{lstlisting}
+    addi $a0, $a0, -1
+\end{lstlisting}
+使\$a0减小，减至0后lw指令装载之前\$a0值。\\
+\$v0是\$a0累加，
+\[\$v0 = 5+4+3+2+1+1+2+3+4+5\]
+入栈时\$sp减8，当\$a0等于0时开始出栈，\$sp加8。\\
+\$ra在执行jal指令时改变，第一次jal时\$ra为0x0c，之后为0x38，最后一次lw后\$ra为0x0c。
 
 \section{异常处理}
 
