@@ -54,18 +54,18 @@ parameter [2:0]EX = 3'b010;
 parameter [2:0]MEM = 3'b011;
 parameter [2:0]WB = 3'b100;
 
-parameter [5:0]lw = 5'h23;
-parameter [5:0]sw = 5'h2b;
-parameter [5:0]lui = 5'h0f;
-parameter [5:0]R = 5'h0;
-parameter [5:0]J = 5'h02;
-parameter [5:0]beq = 5'h04;
-parameter [5:0]addi = 5'h08;
-parameter [5:0]addiu = 5'h09;
-parameter [5:0]andi = 5'h0c;
-parameter [5:0]slti = 5'h0a;
-parameter [5:0]sltiu = 5'h0b;
-parameter [5:0]jal = 5'h03;
+parameter [5:0]lw = 6'h23;
+parameter [5:0]sw = 6'h2b;
+parameter [5:0]lui = 6'h0f;
+parameter [5:0]R = 6'h0;
+parameter [5:0]J = 6'h02;
+parameter [5:0]beq = 6'h04;
+parameter [5:0]addi = 6'h08;
+parameter [5:0]addiu = 6'h09;
+parameter [5:0]andi = 6'h0c;
+parameter [5:0]slti = 6'h0a;
+parameter [5:0]sltiu = 6'h0b;
+parameter [5:0]jal = 6'h03;
 
 reg [2:0]state;
 reg [2:0]state_next;
@@ -114,10 +114,13 @@ always @(state)
               begin
                 PCWrite <= 1'b1;
                 PCSource <= 2'b10;
-                if(OpCode == J)
-                  state_next <= sIF;
-                else
-                  state_next <= WB;
+                state_next <= sIF;
+                if(OpCode == jal)
+                  begin
+                    RegDst <= 2'b10;
+                    MemtoReg <= 2'b10;
+                    RegWrite <= 1'b1;
+                  end
               end
             beq:
               begin
@@ -134,7 +137,14 @@ always @(state)
                 else
                   ALUSrcA <= 2'b01;
                 ALUSrcB <= 2'b00;
-                state_next <= WB;
+                if(Funct == 6'h8)
+                  begin
+                    state_next <= sIF;
+                    PCWrite = 1'b1;
+                    PCSource = 2'b00;
+                  end
+                else
+                  state_next <= WB;
               end
             lw,sw:
               begin
@@ -188,18 +198,13 @@ always @(state)
               end
             lw:
               begin
-                RegDst <= 2'b01;
+                RegDst <= 2'b00;
                 MemtoReg <= 2'b01;
               end
             addi,addiu,andi,slti,sltiu,lui:
               begin
                 RegDst <= 2'b00;
                 MemtoReg <= 2'b00;
-              end
-            jal:
-              begin
-                RegDst <= 2'b10;
-                MemtoReg <= 2'b10;
               end
             default:
               state_next <= sIF;
