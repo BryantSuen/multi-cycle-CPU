@@ -83,9 +83,35 @@
 \subsection{setsub类型和机器码字段内容}
 setsub rd rs rt : \{6'h0,rs[4:0],rt[4:0],rd[4:0],5'h0,6'h28\}
 \subsection{ALU verilog代码修改}
-对应ALUConf设置为5'b00011，具体代码见附件。
+对应ALUConf设置为5'b00011，设计执行程序为
+\begin{lstlisting}
+    lui $a0 0xABCD      
+    addi $a0 $a0 0x1234  
+    lui $a1 0xCDEF
+    addi $a1 $a1 0x3456  
+    setsub $a2 $a0 $a1
+    Loop:
+    beq $zero $zero Loop
+\end{lstlisting}
+对应机器码为
+\begin{lstlisting}
+    {6'h0f,5'd0,5'd4,16'habcd}
+    {6'h08,5'd4,5'd4,16'h1234}
+    {6'h0f,5'd0,5'd5,16'hcdef}
+    {6'h08,5'd5,5'd5,16'h3456}
+    {6'h0,5'd4,5'd5,5'd6,5'h0,6'h28}
+    {6'h04,5'd0,5'd0,16'hffff}
+\end{lstlisting}
+具体代码见附件。
 \subsection{仿真结果}
-
+0xabcd1234 setsub 0xcdef5678  \\
+= 1010\_1011\_1100\_1101\_0001\_0010\_0011\_0100 setsub 1100\_1101\_1110\_1111\_0011\_0100\_0101\_0110\\
+= 0010\_0010\_0000\_0000\_0000\_0010\_0010\_0000 = 0x2200\_0220\\
+仿真结果如图
+\begin{center}
+    \includegraphics[width = 16cm]{images/sim_setsub_waveform.png}
+\end{center}
+与预期一致。
 
 \section{汇编程序分析-1}
 \subsection{计算寄存器值}
@@ -169,7 +195,7 @@ setsub rd rs rt : \{6'h0,rs[4:0],rt[4:0],rd[4:0],5'h0,6'h28\}
     \includegraphics[width = 16cm]{images/sim_2_waveform.png}
 \end{center}
 
-\subsection{观察、描述并解释 PC、\$a0、\$v0、\$sp、\$ra 如何变化}
+\subsection{观察、描述并解释寄存器如何变化}
 PC在sIF状态结束时+4，在beq、j、jal、jr的EX阶段结束时PC跳转到对应的地址，如下图所示。
 \begin{center}
     \includegraphics[width = 16cm]{images/pc_waveform.png}

@@ -110,17 +110,18 @@ always @(state)
       EX:
         begin
           case (OpCode)
-            J,jal:
+            J:
               begin
                 PCWrite <= 1'b1;
                 PCSource <= 2'b10;
                 state_next <= sIF;
-                if(OpCode == jal)
-                  begin
-                    RegDst <= 2'b10;
-                    MemtoReg <= 2'b10;
-                    RegWrite <= 1'b1;
-                  end
+              end
+            jal:
+              begin
+                RegDst <= 2'b10;
+                MemtoReg <= 2'b10;
+                RegWrite <= 1'b1;
+                state_next <= WB;
               end
             beq:
               begin
@@ -191,6 +192,13 @@ always @(state)
           RegWrite <= 1'b1;
           state_next <= sIF;
           case (OpCode)
+            jal:
+              begin
+                PCWrite <= 1'b1;
+                PCSource <= 2'b10;
+                state_next <= sIF;
+                RegWrite <= 1'b0;
+              end
             R:
               begin
                 RegDst <= 2'b01;
