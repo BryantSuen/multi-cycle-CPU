@@ -47,7 +47,7 @@ PC pc(.reset(reset),.clk(clk),.PCWrite(PC_write_en),.PC_i(PC_next),.PC_o(PC_cur)
 wire [31:0]Mem_data;
 wire [31:0]Mem_addr;
 assign Mem_addr = (IorD == 1)?ALU_out:PC_cur;
-InstAndDataMemory_1 IDM(.reset(reset),.clk(clk),.Address(Mem_addr),
+InstAndDataMemory_setsub IDM(.reset(reset),.clk(clk),.Address(Mem_addr),
                       .Write_data(B_out),.MemRead(MemRead),
                       .MemWrite(MemWrite),.Mem_data(Mem_data));
 
