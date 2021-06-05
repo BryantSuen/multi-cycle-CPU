@@ -34,12 +34,15 @@ wire PC_write_en;
 wire [31:0]PC_0;
 wire [31:0]PC_1;
 wire [31:0]PC_2;
+wire [31:0]PC_exp;
 
 assign PC_0 = Result;
 assign PC_1 = ALU_out;
 assign PC_2 = {PC_cur[31:28],rs,rt,rd,Shamt,Funct,2'b00};
 
-assign PC_next = (PCSource == 2'b01)?PC_1:(PCSource == 2'b10)?PC_2:PC_0;
+assign PC_exp = exp_state?epc:32'h7c;
+
+assign PC_next = (PCSource == 2'b01)?PC_1:(PCSource == 2'b10)?PC_2:(PCSource == 2'b11)?PC_exp:PC_0;
 assign PC_write_en = (PCWriteCond && Zero) || PCWrite;
 PC pc(.reset(reset),.clk(clk),.PCWrite(PC_write_en),.PC_i(PC_next),.PC_o(PC_cur));
 
@@ -48,8 +51,8 @@ wire [31:0]Mem_data;
 wire [31:0]Mem_addr;
 assign Mem_addr = (IorD == 1)?ALU_out:PC_cur;
 InstAndDataMemory_1 IDM(.reset(reset),.clk(clk),.Address(Mem_addr),
-                      .Write_data(B_out),.MemRead(MemRead),
-                      .MemWrite(MemWrite),.Mem_data(Mem_data));
+                          .Write_data(B_out),.MemRead(MemRead),
+                          .MemWrite(MemWrite),.Mem_data(Mem_data));
 
 //InstReg
 wire [4:0]rs;
@@ -82,8 +85,8 @@ wire [4:0]Write_register;
 wire [31:0] Read_data1;
 wire [31:0] Read_data2;
 wire [31:0] Write_data;
-assign Write_register = (RegDst == 2'b01)?rd:(RegDst == 2'b10)?5'b11111:rt;
-assign Write_data = (MemtoReg == 2'b01)?MDR_data:(MemtoReg == 2'b10)?PC_cur:ALU_out;
+assign Write_register = (RegDst == 2'b01)?rd:(RegDst == 2'b10)?5'b11111:(RegDst == 2'b11)?errtarget:rt;
+assign Write_data = (MemtoReg == 2'b01)?MDR_data:(MemtoReg == 2'b10)?PC_cur:(MemtoReg == 2'b11)?32'hffff_ffff:ALU_out;
 RegisterFile RF(.reset(reset),.clk(clk),.RegWrite(RegWrite),
                 .Read_register1(rs),.Read_register2(rt),
                 .Write_register(Write_register),.Write_data(Write_data),
@@ -105,12 +108,14 @@ wire [1:0] ALUSrcA;
 wire [1:0] ALUSrcB;
 wire [3:0] ALUOp;
 wire [1:0] PCSource;
+wire exp_state;
 Controller controller(.reset(reset),.clk(clk),.OpCode(OpCode),
                       .Funct(Funct),.PCWrite(PCWrite),.PCWriteCond(PCWriteCond),
                       .IorD(IorD),.MemWrite(MemWrite),.MemRead(MemRead),
                       .IRWrite(IRWrite),.MemtoReg(MemtoReg),.RegDst(RegDst),
                       .RegWrite(RegWrite),.ExtOp(ExtOp),.LuiOp(LuiOp),.ALUSrcA(ALUSrcA),
-                      .ALUSrcB(ALUSrcB),.ALUOp(ALUOp),.PCSource(PCSource));
+                      .ALUSrcB(ALUSrcB),.ALUOp(ALUOp),.PCSource(PCSource),
+                      .exp_state(exp_state),.exp_flag(exp_flag),.exp_write(exp_write));
 
 //ALUControl
 wire [4:0]ALUConf;
@@ -133,6 +138,16 @@ wire [31:0]ImmExtOut;
 wire [31:0]ImmExtShift;
 ImmProcess immprocess(.ExtOp(ExtOp),.LuiOp(LuiOp),.Immediate({rd,Shamt,Funct}),
                       .ImmExtOut(ImmExtOut),.ImmExtShift(ImmExtShift));
+
+//ExceptionProcess
+wire [31:0]epc;
+wire [4:0]errtarget;
+wire exp_write;
+wire exp_flag;
+ExceptionProcess exp_process(.clk(clk),.exp_write(exp_write),
+                             .PC(PC_cur),.ALU_A(In1[31]),.ALU_B(In2[31]),.ALU_out(Result[31]),
+                             .OpCode(OpCode),.Funct(Funct),.rt(rt),.rd(rd),
+                             .epc(epc),.errtarget(errtarget),.flag(exp_flag));
 
 //--------------Your code above-----------------------
 

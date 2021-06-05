@@ -23,13 +23,15 @@
 module Controller(reset, clk, OpCode, Funct,
                   PCWrite, PCWriteCond, IorD, MemWrite, MemRead,
                   IRWrite, MemtoReg, RegDst, RegWrite, ExtOp, LuiOp,
-                  ALUSrcA, ALUSrcB, ALUOp, PCSource);
+                  ALUSrcA, ALUSrcB, ALUOp, PCSource,
+                  exp_state,exp_flag,exp_write);
 //Input Clock Signals
 input reset;
 input clk;
 //Input Signals
 input  [5:0] OpCode;
 input  [5:0] Funct;
+input exp_flag;
 //Output Control Signals
 output reg PCWrite;
 output reg PCWriteCond;
@@ -46,6 +48,8 @@ output reg [1:0] ALUSrcA;
 output reg [1:0] ALUSrcB;
 output reg [3:0] ALUOp;
 output reg [1:0] PCSource;
+output reg exp_state;
+output reg exp_write;
 
 //--------------Your code below-----------------------
 parameter [2:0]sIF = 3'b000;
@@ -66,6 +70,7 @@ parameter [5:0]andi = 6'h0c;
 parameter [5:0]slti = 6'h0a;
 parameter [5:0]sltiu = 6'h0b;
 parameter [5:0]jal = 6'h03;
+parameter [5:0]errproc = 6'h05;
 
 reg [2:0]state;
 reg [2:0]state_next;
@@ -91,11 +96,11 @@ always @(state)
           ALUSrcA <= 2'b00;
           ALUSrcB <= 2'b01;
           IorD <= 1'b0;
-          state_next <= sID;
 
           PCWriteCond <= 1'b0;
           RegWrite <= 1'b0;
           MemWrite <= 1'b0;
+          exp_write <= 1'b0;
         end
       sID:
         begin
@@ -110,6 +115,16 @@ always @(state)
       EX:
         begin
           case (OpCode)
+            errproc:
+              begin
+                RegDst <= 2'b11;
+                RegWrite <= 1'b1;
+                MemtoReg <= 2'b11;
+                PCWrite <= 1'b1;
+                PCSource <= 2'b11;
+                exp_state <= 1'b1;
+                state_next <= sIF;
+              end
             J:
               begin
                 PCWrite <= 1'b1;
@@ -138,6 +153,12 @@ always @(state)
                 else
                   ALUSrcA <= 2'b01;
                 ALUSrcB <= 2'b00;
+                if(Funct == 6'h09)  //jalr
+                  begin
+                    RegDst <= 2'b01;
+                    MemtoReg <= 2'b00;
+                    RegWrite <= 1'b1;
+                  end
                 if(Funct == 6'h8)
                   begin
                     state_next <= sIF;
@@ -145,7 +166,10 @@ always @(state)
                     PCSource = 2'b00;
                   end
                 else
-                  state_next <= WB;
+                  begin
+                    exp_write <= 1'b1;
+                    state_next <= WB;
+                  end
               end
             lw,sw:
               begin
@@ -189,6 +213,7 @@ always @(state)
         end
       WB:
         begin
+          exp_write <= 1'b0;
           RegWrite <= 1'b1;
           state_next <= sIF;
           case (OpCode)
@@ -196,13 +221,28 @@ always @(state)
               begin
                 PCWrite <= 1'b1;
                 PCSource <= 2'b10;
-                state_next <= sIF;
                 RegWrite <= 1'b0;
               end
             R:
               begin
-                RegDst <= 2'b01;
-                MemtoReg <= 2'b00;
+                if(Funct == 6'h09)
+                  begin
+                    PCWrite <= 1'b1;
+                    PCSource <= 2'b10;
+                    RegWrite <= 1'b0;
+                  end
+                else if(exp_flag)
+                  begin
+                    PCSource <= 2'b11;
+                    exp_state <= 1'b0;
+                    PCWrite <= 1'b1;
+                    RegWrite <= 1'b0;
+                  end
+                else
+                  begin
+                    RegDst <= 2'b01;
+                    MemtoReg <= 2'b00;
+                  end
               end
             lw:
               begin
@@ -211,8 +251,18 @@ always @(state)
               end
             addi,addiu,andi,slti,sltiu,lui:
               begin
-                RegDst <= 2'b00;
-                MemtoReg <= 2'b00;
+                if(exp_flag)
+                  begin
+                    PCSource <= 2'b11;
+                    exp_state <= 1'b0;
+                    PCWrite <= 1'b1;
+                    RegWrite <= 1'b0;
+                  end
+                else
+                  begin
+                    RegDst <= 2'b00;
+                    MemtoReg <= 2'b00;
+                  end
               end
             default:
               state_next <= sIF;
