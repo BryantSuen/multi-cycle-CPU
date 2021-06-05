@@ -27,7 +27,7 @@
 \maketitle
 \tableofcontents
 \newpage
-\section{数字通路设计}
+\section{数据通路设计}
 \subsection{寄存器与多路选择器及其功能}
 \begin{itemize}
     \item 寄存器
@@ -212,7 +212,51 @@ PC在sIF状态结束时+4，在beq、j、jal、jr的EX阶段结束时PC跳转到
 \$ra在执行jal指令时改变，第一次jal时\$ra为0x0c，之后为0x38，最后一次lw后\$ra为0x0c。
 
 \section{异常处理}
-
+\subsection{控制信号与功能}
+\begin{itemize}
+    \item exp\_flag：异常判断信号，0-无异常，1-异常
+    \item exp\_write：异常寄存器(EPC,ErrorTarget)写信号，0-不能写，1-允许写
+    \item exp\_state：异常PC跳转选择信号，0-0x7c，1-EPC
+\end{itemize}
+\subsection{指令格式与状态转移图}
+由于异常处理程序只涉及将0xffff\_ffff写回目标寄存器无额外功能，因此只需要分配新OpCode加以区分。指令格式
+\begin{lstlisting}
+    {6'h05,26'h0}
+\end{lstlisting}
+状态转移图为
+\begin{center}
+    \includegraphics[width = 12cm]{images/exception_fsm.png}
+\end{center}
+\subsection{仿真}
+汇编程序为
+\begin{lstlisting}
+    lui $a0 0x7fff
+    addi $a0 $a0 0x1234
+    lui $a1 0x7fff
+    addi $a1 $a1 0x1234
+    add $a0 $a0 $a1
+    addi $a2 $0 5
+    addi $a2 $a2 4
+    Loop:
+    beq $zero $zero Loop
+\end{lstlisting}
+对应机器码为
+\begin{lstlisting}
+    {6'h0f,5'd0,5'd4,16'h7fff}
+    {6'h08,5'd4,5'd4,16'h1234}
+    {6'h0f,5'd0,5'd5,16'h7fff}
+    {6'h08,5'd5,5'd5,16'h1234}
+    {6'h0,5'd4,5'd5,5'd4,5'h0,6'h20}
+    {6'h08,5'd0,5'd6,16'd5}
+    {6'h08,5'd6,5'd6,16'd4}
+    {6'h04,5'd0,5'd0,16'hffff}
+\end{lstlisting}
+程序写在InstAndDataMemory\_exp.v中，需修改顶层文件对应模块名称。这段程序\$a0会溢出，最终值应为ffff\_ffff，而\$a2继续执行，最终值应为9。\\
+仿真结果为
+\begin{center}
+    \includegraphics[width = 16cm]{images/sim_exp_waveform.png}
+\end{center}
+与预期一致。
 %\begin{lstlisting}[language=Matlab]
 %\end{lstlisting}
 
