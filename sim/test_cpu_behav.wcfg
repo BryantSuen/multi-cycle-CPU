@@ -12,14 +12,14 @@
    </db_ref_list>
    <zoom_setting>
       <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="43100001fs"></ZoomEndTime>
-      <Cursor1Time time="14000000fs"></Cursor1Time>
+      <ZoomEndTime time="4360001fs"></ZoomEndTime>
+      <Cursor1Time time="2060000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="268"></NameColumnWidth>
-      <ValueColumnWidth column_width="119"></ValueColumnWidth>
+      <ValueColumnWidth column_width="114"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="6" />
+   <WVObjectSize size="13" />
    <wvobject type="logic" fp_name="/test_cpu/reset">
       <obj_property name="ElementShortName">reset</obj_property>
       <obj_property name="ObjectShortName">reset</obj_property>
@@ -43,5 +43,33 @@
    <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/RF/RF_data[2]">
       <obj_property name="ElementShortName">[2][31:0]</obj_property>
       <obj_property name="ObjectShortName">[2][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/PC_cur">
+      <obj_property name="ElementShortName">PC_cur[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PC_cur[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/OpCode">
+      <obj_property name="ElementShortName">OpCode[5:0]</obj_property>
+      <obj_property name="ObjectShortName">OpCode[5:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/PC_exp">
+      <obj_property name="ElementShortName">PC_exp[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PC_exp[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/IDM/RAM_data[31]">
+      <obj_property name="ElementShortName">[31][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[31][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/IDM/RAM_data[4]">
+      <obj_property name="ElementShortName">[4][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[4][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/exp_process/epc">
+      <obj_property name="ElementShortName">epc[31:0]</obj_property>
+      <obj_property name="ObjectShortName">epc[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/test_cpu/MultiCycleCPU_1/exp_process/errtarget">
+      <obj_property name="ElementShortName">errtarget[4:0]</obj_property>
+      <obj_property name="ObjectShortName">errtarget[4:0]</obj_property>
    </wvobject>
 </wave_config>
