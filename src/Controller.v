@@ -159,7 +159,7 @@ always @(state)
                     MemtoReg <= 2'b00;
                     RegWrite <= 1'b1;
                   end
-                if(Funct == 6'h8)
+                if(Funct == 6'h8)   //jr
                   begin
                     state_next <= sIF;
                     PCWrite = 1'b1;
