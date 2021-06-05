@@ -41,18 +41,18 @@
           \end{itemize}
     \item 多路选择器
           \begin{itemize}
-              \item IorD：Instruction or data，选择读取存储器的数据为指令(0)或者数据(1)。
-              \item RegDst：选择写回寄存器堆中的寄存器位置，rt(00),rd(01)或者\$ra(10)，其中\$ra在执行jal指令时使用。
-              \item MemToReg：选择写回寄存器堆的数据来源。ALUOut(00)，内存数据(01)，PC(10)。
-              \item ALUSrcA：选择ALU操作数1的数据来源，PC(00),临时寄存器A(01),以及在移位时用到的Shamt(10)
-              \item ALUSrcB：选择ALU操作数2的数据来源，临时寄存器B(00)，常数4(01)，立即数(10)以及移位后的立即数(11)
-              \item PCSource：选择更新PC时PC的来源，PC+4(00)，分支指令计算结果(01)以及伪直接寻址(10)
+              \item Mux1控制信号IorD(Instruction or data)，选择读取存储器的数据为指令(0)或者数据(1)。
+              \item Mux2控制信号RegDst：选择写回寄存器堆中的寄存器位置，rt(00),rd(01)或者\$ra(10)，其中\$ra在执行jal指令时使用。
+              \item Mux3控制信号MemToReg：选择写回寄存器堆的数据来源。ALUOut(00)，内存数据(01)，PC(10)。
+              \item Mux4控制信号ALUSrcA：选择ALU操作数1的数据来源，PC(00),临时寄存器A(01),以及在移位时用到的Shamt(10)
+              \item Mux5控制信号ALUSrcB：选择ALU操作数2的数据来源，临时寄存器B(00)，常数4(01)，立即数(10)以及移位后的立即数(11)
+              \item Mux6控制信号PCSource：选择更新PC时PC的来源，PC+4(00)，分支指令计算结果(01)以及伪直接寻址(10)
           \end{itemize}
 \end{itemize}
-具体情况如下示意图所示，代码见附件。
+具体情况如下示意图所示，寄存器用红色标出，多路选择器用紫色标出，代码见附件。
 \subsection{示意图}
 \begin{center}
-
+    \includegraphics[width = 16cm]{images/mipscpu.jpg}
 \end{center}
 
 \section{控制信号分析与有限状态机实现}
@@ -103,7 +103,7 @@ setsub rd rs rt : \{6'h0,rs[4:0],rt[4:0],rd[4:0],5'h0,6'h28\}
     {6'h0,5'd4,5'd5,5'd6,5'h0,6'h28}
     {6'h04,5'd0,5'd0,16'hffff}
 \end{lstlisting}
-具体代码见附件。
+程序写在InstAndDataMemory\_setsub.v中，需修改顶层文件对应模块名称。
 \subsection{仿真结果}
 0xabcd1234 setsub 0xcdef5678  \\
 = 1010\_1011\_1100\_1101\_0001\_0010\_0011\_0100 setsub 1100\_1101\_1110\_1111\_0011\_0100\_0101\_0110\\
@@ -189,7 +189,7 @@ setsub rd rs rt : \{6'h0,rs[4:0],rt[4:0],rd[4:0],5'h0,6'h28\}
     {6'h0,5'd4,5'd2,5'd2,5'd0,6'h20}
     {6'h0,5'd31,15'd0,6'h08}
 \end{lstlisting}
-修改文件位于InstAndDataMemory\_1.v
+程序写在InstAndDataMemory\_1.v中，需修改顶层文件对应模块名称。
 \subsection{\$a0,\$v0值}
 根据上述分析，\$v0值为30，即0x1e，\$a0值为5，仿真结果如图
 \begin{center}
